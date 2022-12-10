@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi"
+      crossorigin="anonymous"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas&#43;Neue&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link href="style.css" rel="stylesheet" />
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3"
+      crossorigin="anonymous"
+    ></script>
+    <script>
+      var _products = [
+        {
+          name: "Merlot",
+          grapes: [{name:"Merlot", qty:4}],
+          ingredients: [{ name: "Sugar", qty: 2 }, {name:"Bottle of Water", qty:1}],
+          sellprice: 400,
+        },
+        {
+          name: "Pinot Noir",
+          grapes: [{name:"Pinot Noir", qty:6}],
+          ingredients: [{ name: "Sugar", qty: 3 }, {name:"Bottle of Water", qty:1}],
+          sellprice: 500,
+        },
+        {
+          name: "Chardonnay",
+          grapes: [{name:"Chardonnay", qty:8}],
+          ingredients: [{ name: "Sugar", qty: 5 }, {name:"Bottle of Water", qty:2}],
+          sellprice: 550,
+        },
+        {
+          name: "Pinot Grigio",
+          grapes: [{name:"Pinot Grigio", qty:6}],
+          ingredients: [{ name: "Sugar", qty: 2 }, {name:"Bottle of Water", qty:1}],
+          sellprice: 450,
+        },
+        {
+          name: "Rosé",
+          grapes: [{name:"Pinot Noir", qty:4}],
+          ingredients: [{ name: "Sugar", qty: 3 }, {name:"Bottle of Water", qty:2}],
+          sellprice: 450,
+        },
+        // {
+        //   name: "Champagne",
+        //   grapes: [{name:"Pinot Noir", qty:6}, {name:"Chardonnay", qty:6}],
+        //   ingredients: [{ name: "Sugar", qty: 5 }, {name:"Bottle of Water", qty:3}],
+        //   sellprice: 750,
+        // },
+      ];
+
+      var _grapes = [
+        { name: "Merlot"},
+        { name: "Pinot Noir"},
+        { name: "Chardonnay"},
+        { name: "Pinot Grigio"},
+      ];
+
+      var _ingredients = [
+        { name: "Sugar", cost: 2 },
+        { name: "Bottle of Water", cost: 10 },
+      ];
+      var _taxRate = 0.0999;
+
+      var _order = {
+        grapes: [],
+        products: [],
+        ingredients: [],
+        cost: 0,
+        sellprice: 0,
+        profit: 0,
+      };
+
+      var closeOnOrderConfirmation = true;
+
+      function calculateIngredientsCosts(ingredients) {
+        var cost = 0;
+        ingredients.forEach((ingredient) => {
+          var found = _ingredients.find((ing) => {
+            return ing.name == ingredient.name;
+          });
+          cost += found.cost * ingredient.qty;
+        });
+        return cost;
+      }
+
+      function calculateOrder() {
+        var cumulativeCost = 0;
+        var cumulativeSellprice = 0;
+        for (var i = 0; i < _order.products.length; ++i) {
+          cumulativeCost += calculateIngredientsCosts(_order.products[i].product.ingredients) *_order.products[i].qty;
+          cumulativeSellprice += _order.products[i].product.sellprice * _order.products[i].qty;
+        }
+
+        _order.cost = cumulativeCost;
+        _order.sellprice = cumulativeSellprice;
+        _order.profit = _order.sellprice - _order.cost;
+      }
+
+      function removeFromOrder(productIndex) {
+        _order.grapes.splice(productIndex, 1);
+        updateOrder();
+      }
+
+      function getOrderItemQtyId(productName) {
+        return productName + " order_qty";
+      }
+
+      function changeGrapeQuantity(grapeName, newQty) {
+        if (newQty == 0) {
+          var index = _order.grapes.findIndex(
+            (item) => item.grape.name == grapeName
+          );
+          if (index > -1) {
+            _order.grapes.splice(index, 1);
+            updateOrder();
+          }
+        } else {
+          var foundItem = _order.grapes.find(
+            (item) => item.grape.name == grapeName
+          );
+          if (foundItem) {
+            foundItem.qty = Number(newQty);
+            updateOrder();
+          }
+        }
+      }
+
+      function regenerateGrapeList(order) {
+        var grapeList = document.getElementById("grapeList");
+        while (grapeList.lastElementChild) {
+            grapeList.removeChild(grapeList.lastElementChild);
+        }
+
+        for (var i = 0; i < order.grapes.length; ++i) {
+          var rowDiv = document.createElement("li");
+          rowDiv.className = "order-list-row";
+          grapeList.appendChild(rowDiv);
+
+          var nameDiv = document.createElement("div");
+          nameDiv.textContent = order.grapes[i].grape.name;
+          rowDiv.appendChild(nameDiv);
+
+          var qtyInput = document.createElement("input");
+          qtyInput.setAttribute("type", "number");
+          qtyInput.id = getOrderItemQtyId(order.grapes[i].grape.name);
+          qtyInput.className = "item-order-qty";
+          qtyInput.name = order.grapes[i].grape.name;
+          qtyInput.value = Number(order.grapes[i].qty);
+          qtyInput.onchange = function (e) {
+            changeGrapeQuantity(e.target.name, Number(e.target.value));
+          };
+          rowDiv.appendChild(qtyInput);
+
+          var buttonParent = document.createElement("div");
+          buttonParent.className = "btn-parent";
+          var button = document.createElement("button");
+          button.classList.add("btn-remove");
+          button.value = i;
+          button.onclick = function () {
+            removeFromOrder(this.value);
+          };
+          rowDiv.appendChild(buttonParent);
+          buttonParent.appendChild(button);
+        }
+      }
+
+      function regenerateOrderList(order) {
+        var orderList = document.getElementById("orderList");
+        while (orderList.lastElementChild) {
+          orderList.removeChild(orderList.lastElementChild);
+        }
+
+        for (var i = 0; i < order.products.length; ++i) {
+          var rowDiv = document.createElement("li");
+          rowDiv.className = "order-list-row";
+          orderList.appendChild(rowDiv);
+
+          var nameDiv = document.createElement("div");
+          nameDiv.textContent = order.products[i].product.name + " x " +order.products[i].qty;
+          rowDiv.appendChild(nameDiv);
+        }
+      }
+
+      function regenerateIngredientsList(order) {
+        var ingredientsList = document.getElementById("ingredientsList");
+        while (ingredientsList.lastElementChild) {
+          ingredientsList.removeChild(ingredientsList.lastElementChild);
+        }
+
+        for (var i = 0; i < order.ingredients.length; ++i) {
+          var rowDiv = document.createElement("div");
+          rowDiv.className = "row";
+          ingredientsList.appendChild(rowDiv);
+
+          var nameDiv = document.createElement("div");
+          nameDiv.className = "col";
+          nameDiv.textContent = order.ingredients[i].name;
+          rowDiv.appendChild(nameDiv);
+
+          var qtyDiv = document.createElement("div");
+          qtyDiv.className = "col-sm";
+          qtyDiv.innerText = order.ingredients[i].qty;
+          rowDiv.appendChild(qtyDiv);
+        }
+      }
+
+      function updateIngredientsList() {
+        _order.ingredients = [];
+
+        for ( var productIndex = 0; productIndex < _order.products.length; ++productIndex ) 
+        {
+          var product = _order.products[productIndex].product;
+          var qty = _order.products[productIndex].qty;
+
+          for ( var ingIndex = 0; ingIndex < product.ingredients.length; ++ingIndex ) {
+            var ingredient = product.ingredients[ingIndex];
+            var foundIndex = _order.ingredients.findIndex((ing) => { return ing.name == ingredient.name; });
+            if (foundIndex >= 0) 
+            {
+              _order.ingredients[foundIndex].qty += ingredient.qty * qty;
+            } 
+            else
+             {
+              _order.ingredients.push({ name: ingredient.name, qty: ingredient.qty * qty });
+            }
+          }
+        }
+      }
+
+      function updateOrderDetails(order) {
+        document.getElementById("orderCost").innerHTML = order.cost;
+        document.getElementById("orderSellprice").innerHTML = order.sellprice;
+        document.getElementById("orderProfit").innerHTML = order.profit;
+      }
+
+      function getBestProductForGrape(grape, qty)
+      {
+        var productName = "";
+        var productProfit = 0;
+        var productQty = 0;
+
+        for( var productIdx = 0; productIdx < _products.length; ++productIdx )
+        {
+            var foundIndex = _products[productIdx].grapes.findIndex( (tmpGrape) => (tmpGrape.name == grape) );
+            if( foundIndex >= 0 )
+            {
+                //Calculate the profit
+                var tempQty = Math.floor(qty / _products[productIdx].grapes[foundIndex].qty);
+                var tempProfit = tempQty * (_products[productIdx].sellprice - calculateIngredientsCosts(_products[productIdx].ingredients));
+                if( tempProfit > productProfit )
+                {
+                    productName = _products[productIdx].name;
+                    productProfit = tempProfit;
+                    productQty = tempQty;
+                }
+            }
+        }
+
+        if( productName.length > 0 )
+        {
+            return { product: _products.find( (product) => (product.name == productName) ), qty: productQty };
+        }
+        return null;
+      }
+
+      function calculateProductList()
+      {
+        _order.products.splice(0, _order.products.length);
+        for( var i=0; i < _order.grapes.length; ++i)
+        {
+            var bestProduct = getBestProductForGrape(_order.grapes[i].grape.name, _order.grapes[i].qty) ;
+            if( bestProduct )
+            {
+                _order.products.push( bestProduct);
+            }
+        }
+      }
+
+      function updateOrder() 
+      {
+        calculateProductList();
+        updateIngredientsList();
+        calculateOrder();
+        regenerateGrapeList(_order);
+        regenerateOrderList(_order);
+        regenerateIngredientsList(_order);
+        updateOrderDetails(_order);
+      }
+
+      function addGrapeSelection(grapes) {
+        var selection = document.getElementById("productSelection");
+
+        for (var i = 0; i < grapes.length; ++i) {
+          var option = document.createElement("option");
+          option.textContent = products[i].name;
+          option.value = i;
+          selection.appendChild(option);
+        }
+      }
+      function addItemByName(grapeName) {
+        var foundGrape = _grapes.find((item) => item.name == grapeName);
+        if (foundGrape == null) {
+          return;
+        }
+
+        var grapeQuantity = 1;
+        var itemToAdd = { grape: foundGrape, qty: grapeQuantity };
+        var foundIndex = _order.grapes.findIndex( (item) => item.grape.name == foundGrape.name );
+        if (foundIndex < 0) {
+          _order.grapes.push(itemToAdd);
+        } else {
+          _order.grapes[foundIndex].qty += grapeQuantity;
+        }
+        updateOrder();
+      }
+
+      function applyStyle(productElement) {
+        productElement.classList.add("btn-product");
+        productElement.classList.add("btn--coffee");
+      }
+
+      function addGrapeSelectionGrid(grapes) {
+        var selection = document.getElementById("productSelectionGrid");
+
+        for (var i = 0; i < grapes.length; ++i) {
+          var option = document.createElement("button");
+          applyStyle(option, grapes[i].type);
+          option.id = grapes[i].name;
+          option.textContent = grapes[i].name;
+          option.onclick = function (e) {
+            addItemByName(e.target.id);
+          };
+          selection.appendChild(option);
+        }
+      }
+
+      function resetOrder() {
+        _order.grapes.splice(0, _order.grapes.length);
+        updateOrder();
+      }
+
+      function onLoad() {
+        addGrapeSelectionGrid(_grapes);
+      }
+    </script>
+  </head>
+
+  <body onload="onLoad()">
+    <div id="epos-container">
+      <div id="products-and-ingredients">
+        <div id="productSelectionGrid"></div>
+        <div id="ingredients-panel">
+          <div>Ingredients Required:</div>
+          <div id="ingredientsList"></div>
+        </div>
+      </div>
+      <div class="order-contents">
+        <div>Grapes:</div>
+        <ul id="grapeList"></ul>
+        <div>Order Contents:</div>
+        <ul id="orderList"></ul>
+        <div class="order-totals">
+          <label for="orderCost">Total Cost: </label>
+          <div id="orderCost"></div>
+          <div>&nbsp;</div>
+          <label for="orderSellprice">Total Price: </label>
+          <div id="orderSellprice"></div>
+          <div>&nbsp;</div>
+          <label for="orderProfit">Total Profit: </label>
+          <div id="orderProfit"></div>
+          <div>&nbsp;</div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
