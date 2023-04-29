@@ -27,37 +27,37 @@
           name: "Merlot",
           grapes: [{name:"Merlot", qty:4}],
           ingredients: [{ name: "Sugar", qty: 2 }, {name:"Bottle of Water", qty:1}],
-          sellprice: 400,
+          sellprice: 320,
         },
         {
           name: "Pinot Noir",
           grapes: [{name:"Pinot Noir", qty:6}],
           ingredients: [{ name: "Sugar", qty: 3 }, {name:"Bottle of Water", qty:1}],
-          sellprice: 500,
+          sellprice: 400,
         },
         {
           name: "Chardonnay",
           grapes: [{name:"Chardonnay", qty:8}],
           ingredients: [{ name: "Sugar", qty: 5 }, {name:"Bottle of Water", qty:2}],
-          sellprice: 550,
+          sellprice: 440,
         },
         {
           name: "Pinot Grigio",
           grapes: [{name:"Pinot Grigio", qty:6}],
           ingredients: [{ name: "Sugar", qty: 2 }, {name:"Bottle of Water", qty:1}],
-          sellprice: 450,
+          sellprice: 360,
         },
         {
           name: "Rosé",
           grapes: [{name:"Pinot Noir", qty:4}],
           ingredients: [{ name: "Sugar", qty: 3 }, {name:"Bottle of Water", qty:2}],
-          sellprice: 450,
+          sellprice: 360,
         },
         // {
         //   name: "Champagne",
         //   grapes: [{name:"Pinot Noir", qty:6}, {name:"Chardonnay", qty:6}],
         //   ingredients: [{ name: "Sugar", qty: 5 }, {name:"Bottle of Water", qty:3}],
-        //   sellprice: 750,
+        //   sellprice: 600,
         // },
       ];
 
@@ -220,7 +220,7 @@
       function updateIngredientsList() {
         _order.ingredients = [];
 
-        for ( var productIndex = 0; productIndex < _order.products.length; ++productIndex ) 
+        for ( var productIndex = 0; productIndex < _order.products.length; ++productIndex )
         {
           var product = _order.products[productIndex].product;
           var qty = _order.products[productIndex].qty;
@@ -228,10 +228,10 @@
           for ( var ingIndex = 0; ingIndex < product.ingredients.length; ++ingIndex ) {
             var ingredient = product.ingredients[ingIndex];
             var foundIndex = _order.ingredients.findIndex((ing) => { return ing.name == ingredient.name; });
-            if (foundIndex >= 0) 
+            if (foundIndex >= 0)
             {
               _order.ingredients[foundIndex].qty += ingredient.qty * qty;
-            } 
+            }
             else
              {
               _order.ingredients.push({ name: ingredient.name, qty: ingredient.qty * qty });
@@ -289,7 +289,7 @@
         }
       }
 
-      function updateOrder() 
+      function updateOrder()
       {
         calculateProductList();
         updateIngredientsList();
